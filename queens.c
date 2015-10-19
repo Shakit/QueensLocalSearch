@@ -13,6 +13,12 @@
 
 #define QUEEN 5
 
+/* modulo*/
+int mod(int i, int j)
+{
+	return (5 + i % j);
+}
+
 /* Check The column constraint : Ri[5] != Rj[5] */
 int const checkCtrs(const int * queens, int i, int j)
 {
@@ -25,7 +31,7 @@ int const checkCtrs(const int * queens, int i, int j)
 }
 
 /* Returns the cost of a snapshot */
-int cost(int *queens, int range)
+int const cost(const int *queens, const int range)
 {
 	int i,j,res;
 	int check;
@@ -36,18 +42,15 @@ int cost(int *queens, int range)
 		for (j = i+1; j < range; j++)
 		{
 			check = checkCtrs(queens, i, j);
-			/* if (check) printf("%d and %d\n", i, j); */
 			res += check;
-			/* printf("res(%d,%d) = %d\n",i,j,res); */
-			/* res += checkCtrs(queens, i, j); */
 		}
 	}
-	/* printf("res = %d\n",res); */
+
 	return res;
 }
 
 /* Prints a snapshot */
-void printSnapshot(int * queens, int range)
+void printSnapshot(const int * queens, const int range)
 {
 	int i;
 	printf("( ");
@@ -58,29 +61,106 @@ void printSnapshot(int * queens, int range)
 	printf(")\n");
 }
 
+/* Simulates the cost for each possible moves */
+void simulateCost(int * co, int * queens, const int range)
+{
+	int i;
+	int prev;
+	
+	for (i = 0; i < range; i++)
+	{
+		prev = queens[i];
+		
+		queens[i] = i * 5 +(prev-1) %5;
+		co[i*2+1] = cost(queens, range);
+
+		queens[i] = i * 5 +(prev+1) %5;
+		co[i*2+2] = cost(queens, range);
+
+		queens[i] = prev;
+	}
+
+}
+
+/* Moves one queen depending of the values of co[] */
+int move(int * co, int * queens , const int range)
+{
+	int i;
+	int min = co[0];
+	int place = 0;
+	int p;
+	for (int i = 1; i < range*2+1; ++i)
+	{
+		if (i <= min)
+		{
+			min = co[i];
+			place = i;
+		}
+	}
+	
+	if(place != 0)
+	{
+		p = (place-1)/2;
+		if(place % 2 == 0)
+		{
+			queens[p] = p *5 + (queens[p] -1) % 5;
+		}
+		else
+		{
+			queens[p] = p *5 + (queens[p] +1) % 5;
+		}
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}	
+}
+
 /* Main function */
 int main (int argc, char ** argv)
 {
-	int *queens;
-	int i;
-	int c;
+	int *queens, *co;
+	int i,j;
 
-	queens = (int*) malloc (QUEEN);
-
-	/* Initialization of the variables */
+	queens = (int*) malloc (QUEEN * sizeof(int));
+	co = (int*) malloc ((QUEEN*2 +1) * sizeof(int));
+	
+	/* Initialization */
 	for(i = 0; i < QUEEN; ++i)
 	{
 		queens[i] = rand() % 5 + i * 5;
 	}
+	for(i = 0; i < QUEEN *2 +1; ++i)
+	{
+		co[i] = 0;
+	}
+	
+	co[0] = cost(queens,QUEEN);
 	printSnapshot(queens, QUEEN);
+	printf ("Current cost : %d\n", co[0]);
 	
+	/*Local search*/
+	
+	/*while (co[0] > 0)
+	{
+		simulateCost(co, queens, QUEEN);
+		if (!move(co, queens, QUEEN))
+		{
+			break;
+		}
+		printSnapshot(queens, QUEEN);
+		printf ("Current cost : %d\n", co[0]);
+	}*/
+	
+	printSnapshot(queens, QUEEN);
+	printf ("Current cost : %d\n", co[0]);
 
+	/*Free*/
+	/*for (i = 0; i < QUEEN; ++i) free(queens+i);
+	  for (i = 0; i < QUEEN*2 +1; ++i)free(co+i);*/
+	free(queens);
+	free(co);
 
-    /* Value of the current snapshot */
-	printf ("%d\n", cost(queens, QUEEN));
-	int zbra = (1==1);
-	printf ("%d\n",zbra); 
-	
-	
 	return 0;
 }
